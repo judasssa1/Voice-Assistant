@@ -111,14 +111,12 @@
             margin-bottom: 80px;
         }
 
-        /* 修改后的头像容器 - 去掉波纹和背景 */
         .avatar-wrapper {
             width: 150px;
             height: 150px;
             margin: 0 auto 30px;
             border-radius: 0;
             overflow: visible;
-            /* 去掉原来的背景色和阴影 */
             background: transparent;
             box-shadow: none;
             border: none;
@@ -128,7 +126,6 @@
             position: relative;
         }
 
-        /* GIF 图片样式 */
         .avatar-gif {
             width: 100%;
             height: 100%;
@@ -138,7 +135,7 @@
 
         .glow-effect {
             position: absolute;
-            bottom: -3px;           /* 位于 GIF 下方 */
+            bottom: -3px;
             left: 50%;
             transform: translateX(-50%);
             width: 150px;
@@ -146,11 +143,10 @@
             background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 70%);
             border-radius: 50%;
             z-index: 1;
-            animation: glow-pulse 2s ease-in-out infinite;  /* 动态脉冲动画 */
-             filter: blur(2px);
+            animation: glow-pulse 2s ease-in-out infinite;
+            filter: blur(2px);
         }
 
-        /* 👇 新增：光晕脉冲动画 */
         @keyframes glow-pulse {
             0% {
                 transform: translateX(-50%) scale(0.8);
@@ -164,9 +160,8 @@
                 transform: translateX(-50%) scale(0.8);
                 opacity: 0.5;
             }
-}
+        }
 
-        /* 完全移除波纹动画 */
         .ripple {
             display: none;
         }
@@ -176,7 +171,7 @@
             font-weight: 400;
             margin-bottom: 8px;
         }
-        
+
         .sub-greeting {
             font-size: 18px;
             font-weight: 300;
@@ -233,7 +228,7 @@
             100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
 
-        /* Chat Area (Hidden until first message) */
+        /* Chat Area */
         #chat-area {
             display: none;
             width: 100%;
@@ -257,7 +252,7 @@
             margin-bottom: 20px;
             display: flex;
         }
-        
+
         .message.user {
             justify-content: flex-end;
         }
@@ -277,12 +272,12 @@
             background: var(--accent-blue);
             border-color: var(--accent-blue);
         }
-        
+
         .message.ai .bubble {
             background: rgba(255, 255, 255, 0.05);
         }
 
-        /* Bottom Input Bar */
+        /* Input Bar */
         .input-bar {
             position: absolute;
             bottom: 30px;
@@ -308,7 +303,7 @@
             font-size: 15px;
             outline: none;
         }
-        
+
         #user-input::placeholder {
             color: rgba(255,255,255,0.5);
         }
@@ -374,7 +369,6 @@
             cursor: pointer;
         }
 
-        /* Media Queries */
         @media (max-width: 768px) {
             .sidebar { transform: translateX(-100%); position: fixed; height: 100%; z-index: 100; width: 240px; }
             .sidebar.open { transform: translateX(0); }
@@ -383,7 +377,7 @@
             .greeting { font-size: 24px; }
             .avatar-wrapper { width: 120px; height: 120px; }
         }
-        
+
         .listening-text { display: none; font-size: 12px; margin-top: 10px; opacity: 0.8; }
         .btn-voice.active .listening-text { display: block; }
         .btn-voice.active .voice-label { display: none; }
@@ -406,7 +400,7 @@
     <div class="sidebar" id="sidebar">
         <div class="logo">AI 助手</div>
         <div class="subtitle">您的智能语音伴侣</div>
-        
+
         <div class="nav-item active">
             <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
             对话历史
@@ -436,16 +430,14 @@
 
         <!-- Center Greeting -->
         <div class="center-content" id="center-greeting">
-            <!-- 修改后的头像：去掉波纹和 SVG，替换为你的 GIF -->
             <div class="avatar-wrapper">
-                <!-- 将 your-avatar.gif 替换为你自己的 GIF 文件名 -->
                 <img class="avatar-gif" src="https://duk.tw/xeWAcE.gif" alt="AI 助手">
                 <div class="glow-effect"></div>
             </div>
             <div class="greeting">你好！</div>
             <div class="sub-greeting">我是你的 AI 语音助手</div>
             <div class="desc">随时准备帮你处理问题、任务和对话</div>
-            
+
             <div class="action-buttons">
                 <button class="btn btn-primary" onclick="focusInput()">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
@@ -481,11 +473,14 @@
 
     <script>
         const DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions";
+        const SYSTEM_PROMPT = "你是一个友好、自然的语音助手。请用口语化、简洁、准确的中文回答，不要使用Markdown格式，不要出现星号、井号等特殊符号。语气亲切自然，像朋友聊天一样。";
+
         let apiKey = localStorage.getItem('deepseek_api_key') || '';
         let isListening = false;
         let recognition = null;
         let isProcessing = false;
         let chatHistory = [];
+        let selectedVoice = null;
 
         // 初始化语音识别
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -507,12 +502,54 @@
                 console.error('Speech recognition error', event.error);
                 stopListening();
             };
-            
+
             recognition.onend = function() {
                 stopListening();
             };
         } else {
             alert("您的浏览器不支持语音输入，请使用 Chrome 或 Edge 浏览器。");
+        }
+
+        // 初始化语音合成，选择中文女声
+        function initVoice() {
+            if ('speechSynthesis' in window) {
+                const voices = window.speechSynthesis.getVoices();
+                // 优先选择常见中文女声
+                const preferredNames = ['Xiaoxiao', 'Yaoyao', 'Huihui', 'Google 普通话（中国大陆）', 'Microsoft Xiaoxiao', 'Microsoft Yaoyao'];
+                for (let name of preferredNames) {
+                    const found = voices.find(v => v.name.includes(name) && v.lang.startsWith('zh'));
+                    if (found) {
+                        selectedVoice = found;
+                        break;
+                    }
+                }
+                // 若没有找到，选择任意中文女声（根据 name 猜测）
+                if (!selectedVoice) {
+                    selectedVoice = voices.find(v => v.lang.startsWith('zh') && /female|女|xiaoxiao|yaoyao|huihui/i.test(v.name)) || voices.find(v => v.lang.startsWith('zh'));
+                }
+            }
+        }
+
+        // 确保在 voices 加载后初始化
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.onvoiceschanged = initVoice;
+            initVoice();
+        }
+
+        // 语音播报函数
+        function speakText(text) {
+            if (!('speechSynthesis' in window)) return;
+            // 停止当前播报
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-CN';
+            if (selectedVoice) {
+                utterance.voice = selectedVoice;
+            }
+            // 精灵般的声音：音调稍高，语速略慢
+            utterance.pitch = 1.15;
+            utterance.rate = 0.95;
+            window.speechSynthesis.speak(utterance);
         }
 
         // 打开设置
@@ -549,7 +586,6 @@
         // 切换语音输入
         function toggleVoice() {
             if (!recognition) return alert("您的浏览器不支持语音识别。");
-            
             if (isListening) {
                 stopListening();
             } else {
@@ -581,7 +617,7 @@
 
             input.value = '';
             isProcessing = true;
-            
+
             document.getElementById('center-greeting').style.display = 'none';
             document.getElementById('chat-area').style.display = 'block';
 
@@ -591,6 +627,11 @@
             const loadingDiv = appendMessage('ai', '<span class="typing-dots">正在思考</span>', true);
 
             try {
+                const messages = [
+                    { role: "system", content: SYSTEM_PROMPT },
+                    ...chatHistory
+                ];
+
                 const response = await fetch(DEEPSEEK_API_URL, {
                     method: 'POST',
                     headers: {
@@ -599,7 +640,7 @@
                     },
                     body: JSON.stringify({
                         model: "deepseek-chat",
-                        messages: chatHistory,
+                        messages: messages,
                         stream: false
                     })
                 });
@@ -609,11 +650,17 @@
                 }
 
                 const data = await response.json();
-                const aiReply = data.choices[0].message.content;
+                let aiReply = data.choices[0].message.content;
+
+                // 去除所有星号，避免页面上出现 *
+                aiReply = aiReply.replace(/\*/g, '').trim();
 
                 loadingDiv.innerHTML = `<div class="bubble">${aiReply}</div>`;
                 chatHistory.push({ role: "assistant", content: aiReply });
-                
+
+                // 自动语音播报
+                speakText(aiReply);
+
                 const chatArea = document.getElementById('chat-area');
                 chatArea.scrollTop = chatArea.scrollHeight;
 
@@ -628,13 +675,13 @@
             const chatArea = document.getElementById('chat-area');
             const msgDiv = document.createElement('div');
             msgDiv.className = `message ${role}`;
-            
+
             if(isLoading) {
                 msgDiv.innerHTML = `<div class="bubble">${content}</div>`;
             } else {
                 msgDiv.innerHTML = `<div class="bubble">${content}</div>`;
             }
-            
+
             chatArea.appendChild(msgDiv);
             chatArea.scrollTop = chatArea.scrollHeight;
             return msgDiv;
